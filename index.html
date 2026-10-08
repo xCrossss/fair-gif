@@ -473,7 +473,7 @@ const aBubble   = i => inOut(i, 2, 4, 66, 4);
 const aProfile  = i => inOut(i, 5, 6, 62, 5);
 const aPlayer   = i => inOut(i, 7, 5, 62, 5);
 const aChat     = i => inOut(i, 8, 4, 62, 5);
-const screenMix = i => inOut(i, 5, 3, 61, 8);
+const screenMix = i => smooth(span(i, 5, 10)) * (1 - smooth(span(i, 59, 10)));   // 화면 2가 밀려 들어오는 진행도 (끝에서 되돌아감)
 const widgetA   = i => inOut(i, 17, 4, 61, 8);
 const widgetSX  = i => .3 + .7 * easeOut(span(i, 17, 4));
 
@@ -747,11 +747,10 @@ function drawPhone(LY, i) {   // 본체·화면·상태바·위젯·버튼 (아�
   ctx.fillStyle = "#0a0a0c"; rr(P.x + 4, P.y + 4, P.w - 8, P.h - 8, pr - 4); ctx.fill();
   // 화면
   ctx.save(); rr(sx, sy, sw, sh, sr); ctx.clip();
-  const sc1 = im("screen1");
-  if (sc1) cover(sc1, sx, sy, sw, sh, S.s1Scale / 100, S.s1X, S.s1Y);
+  const sc1 = im("screen1"), sMix = S.img.screen2 ? screenMix(i) : 0;   // 화면 2는 오른쪽에서 밀고 들어오고, 화면 1은 30%만 밀려나는 시차
+  if (sc1) cover(sc1, sx - sMix * sw * .3, sy, sw, sh, S.s1Scale / 100, S.s1X, S.s1Y);
   else { const gr = ctx.createLinearGradient(0, sy, 0, sy + sh); gr.addColorStop(0, "#d9d6e6"); gr.addColorStop(1, "#a9a4c4"); ctx.fillStyle = gr; ctx.fillRect(sx, sy, sw, sh); }
-  const sMix = screenMix(i);
-  if (S.img.screen2 && sMix > 0) { ctx.globalAlpha = sMix; cover(S.img.screen2, sx, sy, sw, sh, S.s2Scale / 100, S.s2X, S.s2Y); ctx.globalAlpha = 1; }
+  if (sMix > 0) cover(S.img.screen2, sx + (1 - sMix) * sw, sy, sw, sh, S.s2Scale / 100, S.s2X, S.s2Y);
   // 상태바 (자동이면 화면 위쪽 밝기로 흰·검정 선택)
   const stc = S.statusAuto ? statusInk(LY.screen) : S.statusColor;
   ctx.fillStyle = stc;
