@@ -36,7 +36,8 @@
   main { display:flex; flex-direction:column; align-items:center; gap:14px; padding:22px 24px; overflow:auto; }
   .brand { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:14px; }
   h1 { font-size:17px; margin:0; letter-spacing:-.01em; }
-  .spec { font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .ver { padding:1px 8px; border:0; border-radius:999px; font-size:11px; font-weight:600; color:var(--accent); background:var(--accent-soft); font-variant-numeric:tabular-nums; }
+  .ver:hover { background:var(--accent-soft); text-decoration:underline; }
   .themes { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px; }
   .themes .th { display:flex; flex-direction:column; align-items:stretch; gap:4px; width:100%; padding:5px 5px 4px; border-radius:10px; font-size:12px; }
   .themes .th.on { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600; }
@@ -132,8 +133,13 @@
   #quick { padding:0; }
   body[data-mode=simple] .adv-only, body[data-mode=adv] .simple-only { display:none; }
   @media (max-width:900px) { body { grid-template-columns:1fr; height:auto; } aside { border-bottom:1px solid var(--line); } .split { display:none; } .stage, .bar { max-width:100%; } .drops { grid-template-columns:repeat(3, minmax(0, 132px)); } }
-  dialog#crop { border:0; border-radius:16px; padding:0; width:min(640px, calc(100vw - 32px)); color:var(--text); box-shadow:0 30px 70px -24px rgba(10,20,40,.5); }
-  dialog#crop::backdrop { background:rgba(15,18,28,.55); }
+  dialog#crop, dialog#logDlg { border:0; border-radius:16px; padding:0; width:min(640px, calc(100vw - 32px)); color:var(--text); box-shadow:0 30px 70px -24px rgba(10,20,40,.5); }
+  dialog#crop::backdrop, dialog#logDlg::backdrop { background:rgba(15,18,28,.55); }
+  dialog#logDlg { width:min(480px, calc(100vw - 32px)); }
+  .log { max-height:min(60vh, 520px); overflow:auto; font-size:13px; }
+  .log h3 { margin:14px 0 4px; font-size:14px; font-variant-numeric:tabular-nums; } .log h3:first-child { margin-top:0; }
+  .log h3 span { margin-left:6px; font-size:12px; font-weight:400; color:var(--muted); }
+  .log ul { margin:0; padding-left:18px; line-height:1.6; }
   .crop { padding:18px; display:flex; flex-direction:column; gap:12px; }
   .crop h2 { margin:0; font-size:15px; } .crop .hint { margin:-6px 0 0; }
   #cropView { border-radius:10px; overflow:hidden; background:#14161c; touch-action:none; cursor:grab; }
@@ -149,7 +155,7 @@
 </head>
 <body>
 <aside>
-  <div class="brand"><h1>GIF 페어 메이커 플러스</h1><span class="spec">1440×1000, 71프레임</span></div>
+  <div class="brand"><h1>GIF 페어 메이커 플러스</h1><button type="button" class="ver" id="logBtn" title="업데이트 내역">v1.0.1</button></div>
   <div class="toolbar">
     <button type="button" class="ico" id="undo" title="실행 취소 (Ctrl+Z)" aria-label="실행 취소">↶</button>
     <button type="button" class="ico" id="redo" title="다시 실행 (Ctrl+Shift+Z)" aria-label="다시 실행">↷</button>
@@ -214,6 +220,22 @@
     <div id="cropView" tabindex="0" role="application" aria-roledescription="자르기 영역" aria-label="자르기 영역. 방향키로 이동, +와 -로 확대"><canvas id="cropCv" width="1200" height="840"></canvas></div>
     <label class="zoom"><span>확대</span><input type="range" id="cropZoom" min="1" max="6" step="0.01" value="1"></label>
     <div class="acts"><button type="button" class="orig" id="cropOrig">자르지 않고 쓰기</button><button type="button" id="cropCancel">취소</button><button type="button" class="primary" id="cropOk">적용</button></div>
+  </div>
+</dialog>
+<dialog id="logDlg" aria-labelledby="logTitle">
+  <div class="crop">
+    <h2 id="logTitle">업데이트 내역</h2>
+    <!-- 버전: 메이저.마이너.패치, 세 숫자는 따로 올림 (윗자리가 올라도 아랫자리를 0으로 되돌리지 않음). 맨 위 항목이 제목 옆 버전 표기가 됨 -->
+    <div class="log">
+      <h3>1.0.1 <span>2026-10-09</span></h3>
+      <ul>
+        <li>폰 화면 1에서 2로 넘어갈 때 옆으로 밀리며 부드럽게 바뀝니다.</li>
+        <li>제목 옆 버전 버튼으로 업데이트 내역을 볼 수 있습니다.</li>
+      </ul>
+      <h3>1.0.0 <span>2026-10-08</span></h3>
+      <ul><li>첫 공개.</li></ul>
+    </div>
+    <div class="acts"><button type="button" class="primary" id="logClose" style="margin-left:auto">닫기</button></div>
   </div>
 </dialog>
 <dialog id="keysDlg" aria-labelledby="keysTitle">
@@ -1439,8 +1461,12 @@ addEventListener("paste", e => {   // 복사한 이미지를 빈 칸부터 채�
 const keysDlg = document.getElementById("keysDlg");
 document.getElementById("keys").onclick = () => keysDlg.showModal();
 document.getElementById("keysClose").onclick = () => keysDlg.close();
+const logDlg = document.getElementById("logDlg"), logBtn = document.getElementById("logBtn");
+logBtn.textContent = "v" + logDlg.querySelector(".log h3").firstChild.textContent.trim();
+logBtn.onclick = () => logDlg.showModal();
+document.getElementById("logClose").onclick = () => logDlg.close();
 addEventListener("keydown", e => {
-  if (cropDlg.open || keysDlg.open || e.altKey) return;   // Alt+←/→(뒤로 가기)는 브라우저에 맡김
+  if (cropDlg.open || keysDlg.open || logDlg.open || e.altKey) return;   // Alt+←/→(뒤로 가기)는 브라우저에 맡김
   const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
   const textual = e.target.closest?.("textarea, [contenteditable], input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):not([type=button])");
   const control = e.target.closest?.("input, textarea, select, [contenteditable], [role=separator], #cropView"), pressable = e.target.closest?.("button, summary, a");
